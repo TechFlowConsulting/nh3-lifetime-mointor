@@ -124,6 +124,55 @@
             gap: 14px;
             margin-bottom: 14px;
         }
+        .agent-chat-log {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .chat-msg {
+            max-width: 80%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            line-height: 1.45;
+            font-size: 14px;
+        }
+
+        .chat-msg.user {
+            align-self: flex-end;
+            background: #1d4ed8;
+            color: #ffffff;
+        }
+
+        .chat-msg.bot {
+            align-self: flex-start;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            color: #e5e7eb;
+        }
+
+        .agent-field-wide input {
+            width: 420px;
+        }
+
+        .agent-send-button {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .agent-send-button span {
+            transform: translateX(1px);
+        }
 
         .agent-avatar {
             width: 70px;
@@ -223,50 +272,50 @@
         Monitoramento de exposição, agregação diária e estimativa de vida útil dos sensores de NH₃
     </p>
 
-    <!-- ========================================================= -->
-    <!-- AGENTE NHsys IA -->
-    <!-- ========================================================= -->
-    <div class="agent-card">
-        <div class="agent-header">
-            <div class="agent-avatar">
-                <img src="/static/robot_ai.png" alt="NHsys IA">
-            </div>
-            <div>
-                <p class="agent-title">NHsys IA</p>
-                <p class="agent-subtitle">Assistente inteligente para análise de sensores NH₃</p>
-            </div>
+<!-- ========================================================= -->
+<!-- AGENTE NHsys IA -->
+<!-- ========================================================= -->
+<div class="agent-card">
+    <div class="agent-header">
+        <div class="agent-avatar">
+            <img src="/static/robot_ai.png" alt="NHsys IA">
         </div>
-
-        <div class="agent-bubble">
-            <div id="agent-typing-text"></div>
+        <div>
+            <p class="agent-title">NHsys IA</p>
+            <p class="agent-subtitle">Assistente inteligente para análise de sensores NH₃</p>
         </div>
-
-        <form class="agent-form" method="post" action="/ui/run-explore">
-            <div class="agent-row">
-                <div class="agent-field">
-                    <label for="agent_sensor_id">ID do sensor</label>
-                    <input
-                        type="number"
-                        id="agent_sensor_id"
-                        name="sensor_id"
-                        value="25"
-                        required
-                    >
-                </div>
-
-                <input type="hidden" name="start" value="2026-01-01">
-                <input type="hidden" name="end" value="{{ today_default }}">
-
-                <button class="agent-button" type="submit">
-                    Analisar sensor
-                </button>
-            </div>
-
-            <div class="hint">
-                A análise será feita automaticamente de <b>01/01/2026</b> até <b>hoje</b>.
-            </div>
-        </form>
     </div>
+
+    <div class="agent-bubble">
+        <div id="agent-typing-text"></div>
+    </div>
+
+    <div id="agent-chat-log" class="agent-chat-log"></div>
+
+    <form class="agent-form" id="agent-chat-form" method="post" action="/ui/agent-query">
+        <div class="agent-row">
+            <div class="agent-field agent-field-wide">
+                <label for="agent_prompt">Converse com o NHsys IA</label>
+                <input
+                    type="text"
+                    id="agent_prompt"
+                    name="prompt"
+                    placeholder="Ex.: relatório do sensor 25 | dados do sensor 25 | degradação 25 | 25"
+                    autocomplete="off"
+                    required
+                >
+            </div>
+
+            <button class="agent-send-button" type="submit" aria-label="Enviar">
+                <span>➜</span>
+            </button>
+        </div>
+
+        <div class="hint">
+            Exemplos: <b>25</b>, <b>relatório do sensor 25</b>, <b>dados do sensor 25</b>, <b>degradação 25</b>.
+        </div>
+    </form>
+</div>
 
     <!-- ========================================================= -->
     <!-- AGREGAR DADOS -->
@@ -410,53 +459,134 @@
         </div>
     </form>
 
-    <script>
-    (function () {
-        const target = document.getElementById("agent-typing-text");
-        if (!target) return;
+  <script>
+(function () {
+    const target = document.getElementById("agent-typing-text");
+    const chatLog = document.getElementById("agent-chat-log");
+    const form = document.getElementById("agent-chat-form");
+    const promptInput = document.getElementById("agent_prompt");
 
-        const lines = [
-            "Oi, eu sou o NHsys IA.",
-            "Posso te ajudar a tirar relatórios sobre os sensores de NH₃.",
-            "Para começar, basta me dizer o ID do sensor que você quer analisar.",
-            "",
-            "Exemplo: 25"
-        ];
+    if (!target || !chatLog || !form || !promptInput) return;
 
-        const fullText = lines.join("\n");
-        let i = 0;
+    const introLines = [
+        "Oi, eu sou o NHsys IA.",
+        "Posso te ajudar a tirar relatórios sobre os sensores de NH₃.",
+        "Você pode escrever, por exemplo:",
+        "",
+        "25",
+        "relatório do sensor 25",
+        "dados do sensor 25",
+        "degradação 25"
+    ];
 
-        function renderTypedText(text) {
-            const html = text
-                .replace(/\n/g, "<br>")
-                .replace(/NHsys IA/g, "<b>NHsys IA</b>")
-                .replace(/ID do sensor/g, "<b>ID do sensor</b>")
-                .replace(/Exemplo: 25/g, "<b>Exemplo: 25</b>");
+    const introText = introLines.join("\n");
+    let introIndex = 0;
+    let introFinished = false;
 
-            target.innerHTML = html + '<span class="typing-cursor">|</span>';
+    function formatAgentText(text) {
+        return text
+            .replace(/\n/g, "<br>")
+            .replace(/NHsys IA/g, "<b>NHsys IA</b>")
+            .replace(/relatório do sensor 25/g, "<b>relatório do sensor 25</b>")
+            .replace(/dados do sensor 25/g, "<b>dados do sensor 25</b>")
+            .replace(/degradação 25/g, "<b>degradação 25</b>")
+            .replace(/\b25\b/g, "<b>25</b>");
+    }
+
+    function renderIntro(text, withCursor = true) {
+        const html = formatAgentText(text);
+        target.innerHTML = withCursor
+            ? html + '<span class="typing-cursor">|</span>'
+            : html;
+    }
+
+    function typeIntro() {
+        if (introIndex <= introText.length) {
+            renderIntro(introText.slice(0, introIndex), true);
+            introIndex++;
+            setTimeout(typeIntro, 20);
+        } else {
+            renderIntro(introText, false);
+            introFinished = true;
+        }
+    }
+
+    function appendMessage(text, type) {
+        const div = document.createElement("div");
+        div.className = "chat-msg " + type;
+        div.innerHTML = text;
+        chatLog.appendChild(div);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function extractSensorId(text) {
+        const match = text.match(/(\d+)/);
+        return match ? match[1] : null;
+    }
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        if (!introFinished) return;
+
+        const prompt = promptInput.value.trim();
+        if (!prompt) return;
+
+        const promptLower = prompt.toLowerCase();
+        const sensorId = extractSensorId(prompt) || "25";
+
+        appendMessage(prompt, "user");
+
+        const isDegradacao =
+            promptLower.includes("degradacao") ||
+            promptLower.includes("degradação") ||
+            promptLower.includes("lifetime");
+
+        let fakeMsgs = [];
+
+        if (isDegradacao) {
+            fakeMsgs = [
+                `Entendi. Vou analisar a <b>degradação</b> do sensor <b>${sensorId}</b>.`,
+                "Consultando histórico de lifetime...",
+                "Gerando gráficos de sensibilidade e vida útil restante...",
+                "Abrindo tela de resultados..."
+            ];
+        } else {
+            fakeMsgs = [
+                `Entendi. Vou gerar o <b>relatório</b> do sensor <b>${sensorId}</b>.`,
+                "Consultando dados agregados...",
+                "Gerando gráficos de NH₃, amostras e concentração...",
+                "Abrindo tela de resultados..."
+            ];
         }
 
-        function typeNext() {
-            if (i <= fullText.length) {
-                renderTypedText(fullText.slice(0, i));
-                i++;
-                setTimeout(typeNext, 28);
-            } else {
-                const finalHtml = fullText
-                    .replace(/\n/g, "<br>")
-                    .replace(/NHsys IA/g, "<b>NHsys IA</b>")
-                    .replace(/ID do sensor/g, "<b>ID do sensor</b>")
-                    .replace(/Exemplo: 25/g, "<b>Exemplo: 25</b>");
+        promptInput.readOnly = true;
 
-                target.innerHTML = finalHtml;
+        let idx = 0;
+        function nextBotMsg() {
+            if (idx < fakeMsgs.length) {
+                appendMessage(fakeMsgs[idx], "bot");
+                idx++;
+                setTimeout(nextBotMsg, 700);
+            } else {
+                form.submit();
             }
         }
 
-        window.addEventListener("DOMContentLoaded", function () {
-            typeNext();
-        });
-    })();
-    </script>
+        setTimeout(nextBotMsg, 350);
+    });
 
+    window.addEventListener("DOMContentLoaded", function () {
+        typeIntro();
+    });
+})();
+</script>
+<script>
+window.addEventListener("pageshow", function(event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+</script>
 </body>
 </html>

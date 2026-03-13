@@ -7,7 +7,7 @@ UI Routes (FastAPI + Jinja2) — NH3 Lifetime Monitor
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
-
+import re
 import pandas as pd
 import plotly.graph_objects as go
 from fastapi import APIRouter, Form, Request
@@ -153,7 +153,16 @@ def run_aggregate(start_date: date, end_date: date, ppm_max: float) -> None:
             {"start_date": start_date, "end_date": end_date, "ppm_max": ppm_max},
         )
 
+def parse_agent_prompt(prompt: str) -> tuple[str, int | None]:
+    text_lower = prompt.strip().lower()
 
+    match = re.search(r"(\d+)", text_lower)
+    sensor_id = int(match.group(1)) if match else None
+
+    if any(word in text_lower for word in ["degradacao", "degradação", "lifetime"]):
+        return "lifetime", sensor_id
+
+    return "report", sensor_id
 def load_daily(sensor_id: int, start_day: date, end_day: date) -> pd.DataFrame:
     settings = Settings.load()
     engine = build_engine(settings)
@@ -716,6 +725,82 @@ def ui_agent_explore(
                 f"Oi! Analisei o sensor {sensor_id} no período de {start} até {end}. "
                 f"Foram encontrados {len(df)} dias de dados."
             ),
+            "plots": plots_html,
+            "table_html": "",
+        },
+    )
+@router.post("/agent-query", response_class=HTMLResponse)
+def ui_agent_query(
+    request: Request,
+    prompt: str = Form(...),
+):
+    mode, sensor_id = parse_agent_prompt(prompt)
+
+    if sensor_id is None:
+        return templates.TemplateResponse(
+            "result.html",
+            {
+                "request": request,
+                "title": "NHsys IA",
+                "message": "Não consegui identificar o ID do sensor na sua mensagem. Exemplo: 25, relatório do sensor 25 ou degradação 25.",
+                "plots": [],
+                "table_html": "",
+            },
+        )
+
+    start_day = date(2026, 1, 1)
+    end_day = date.today()
+
+    if mode == "lifetime":
+        df = load_lifetime_daily(sensor_id, start_day, end_day)
+
+        if df.empty:
+            return templates.TemplateResponse(
+                "result.html",
+                {
+                    "request": request,
+                    "title": f"NHsys IA — degradação do sensor {sensor_id}",
+                    "message": f"Não encontrei dados de lifetime para o sensor {sensor_id}.",
+                    "plots": [],
+                    "table_html": "",
+                },
+            )
+
+        plots_html = build_lifetime_plots_plotly(df)
+
+        return templates.TemplateResponse(
+            "result.html",
+            {
+                "request": request,
+                "title": f"NHsys IA — degradação do sensor {sensor_id}",
+                "message": f"Análise de degradação do sensor {sensor_id} de 2026-01-01 até hoje.",
+                "plots": plots_html,
+                "table_html": "",
+            },
+        )
+
+    df = load_daily(sensor_id, start_day, end_day)
+
+    if df.empty:
+        return templates.TemplateResponse(
+            "result.html",
+            {
+                "request": request,
+                "title": f"NHsys IA — relatório do sensor {sensor_id}",
+                "message": f"Não encontrei dados agregados para o sensor {sensor_id}.",
+                "plots": [],
+                "table_html": "",
+            },
+        )
+
+    plots_html = build_all_plots_plotly(df)
+
+    return templates.TemplateResponse(
+        "result.html",
+        {
+            "request": request,
+            "title": f"NHsys IA — relatório do sensor {sensor_id}",
+            "message": f"Relatório do sensor {sensor_id} de 2026-01-01 até hoje.",
             "plots": plots_html,
             "table_html": "",
         },
