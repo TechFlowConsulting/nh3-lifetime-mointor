@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>NH3 Lifetime Monitor</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0e1117;
+            color: #eaeaea;
+            margin: 0;
+            padding: 40px 20px 20px 20px;
+        }
+
+        h1 {
+            margin-bottom: 6px;
+        }
+
+        h2 {
+            margin-top: 28px;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        form {
+            background: #111827;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            max-width: 520px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        input {
+            margin-top: 6px;
+            padding: 6px 8px;
+            width: 220px;
+            background: #020617;
+            color: #eaeaea;
+            border: 1px solid #374151;
+            border-radius: 4px;
+        }
+
+        button {
+            margin-top: 16px;
+            padding: 8px 14px;
+            background: #2563eb;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button.secondary {
+            background: #374151;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        hr {
+            margin: 34px 0;
+            border: 0;
+            border-top: 1px solid #333;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 6px;
+        }
+
+        /* ============================= */
+        /* LOGOS SUPERIOR DIREITA       */
+        /* ============================= */
+        .logo-container {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-techflow {
+             width: 170px;
+        }
+
+        .logo-fluxo {
+            width: 210px;
+        }
+
+        /* ============================= */
+        /* AGENTE NHsys IA               */
+        /* ============================= */
+        .agent-card {
+            background: linear-gradient(135deg, #111827 0%, #0b1220 100%);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 28px;
+            max-width: 900px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .agent-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #60a5fa, #1d4ed8);
+            box-shadow: 0 0 18px rgba(37, 99, 235, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .agent-avatar img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .agent-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .agent-subtitle {
+            margin: 4px 0 0 0;
+            color: #93c5fd;
+            font-size: 13px;
+        }
+
+        .agent-bubble {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 12px;
+            padding: 14px 16px;
+            line-height: 1.5;
+            color: #e5e7eb;
+            margin-bottom: 14px;
+            min-height: 90px;
+        }
+
+        .agent-form {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            max-width: none;
+        }
+
+        .agent-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .agent-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .agent-field input {
+            width: 240px;
+        }
+
+        .agent-button {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            margin-left: 2px;
+            animation: blink 0.9s steps(1) infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="logo-container">
+        
+         <img src="/static/logo_fluxo.png" class="logo-fluxo">
+         <img src="/static/logo_techflowai.png" class="logo-techflow">
+    </div>
+
+    <h1>NH3 Lifetime Monitor</h1>
+    <p class="hint">
+        Monitoramento de exposição, agregação diária e estimativa de vida útil dos sensores de NH₃
+    </p>
+
+    <!-- ========================================================= -->
+    <!-- AGENTE NHsys IA -->
+    <!-- ========================================================= -->
+    <div class="agent-card">
+        <div class="agent-header">
+            <div class="agent-avatar">
+                <img src="/static/robot_ai.png" alt="NHsys IA">
+            </div>
+            <div>
+                <p class="agent-title">NHsys IA</p>
+                <p class="agent-subtitle">Assistente inteligente para análise de sensores NH₃</p>
+            </div>
+        </div>
+
+        <div class="agent-bubble">
+            <div id="agent-typing-text"></div>
+        </div>
+
+        <form class="agent-form" method="post" action="/ui/run-explore">
+            <div class="agent-row">
+                <div class="agent-field">
+                    <label for="agent_sensor_id">ID do sensor</label>
+                    <input
+                        type="number"
+                        id="agent_sensor_id"
+                        name="sensor_id"
+                        value="25"
+                        required
+                    >
+                </div>
+
+                <input type="hidden" name="start" value="2026-01-01">
+                <input type="hidden" name="end" value="{{ today_default }}">
+
+                <button class="agent-button" type="submit">
+                    Analisar sensor
+                </button>
+            </div>
+
+            <div class="hint">
+                A análise será feita automaticamente de <b>01/01/2026</b> até <b>hoje</b>.
+            </div>
+        </form>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- AGREGAR DADOS -->
+    <!-- ========================================================= -->
+    <!--
+    <h2>Agregação diária</h2>
+
+    <form method="post" action="/ui/run-aggregate">
+        <label for="start_agg">Data início</label>
+        <input type="date" id="start_agg" name="start" value="{{ start_default }}" required>
+
+        <label for="end_agg">Data fim</label>
+        <input type="date" id="end_agg" name="end" value="{{ end_default }}" required>
+
+        <label for="ppm_max">ppm_max (limite NH3)</label>
+        <input
+            type="number"
+            step="0.1"
+            id="ppm_max"
+            name="ppm_max"
+            value="{{ ppm_max_default }}"
+            required
+        >
+
+        <button type="submit">Executar agregação</button>
+    </form>
+
+    <hr>
+    -->
+
+    <!-- ========================================================= -->
+    <!-- EXPLORAR / DADOS -->
+    <!-- ========================================================= -->
+    <h2>Explorar dados agregados</h2>
+
+    <form>
+        <label for="sensor_id">Sensor ID</label>
+        <input
+            type="number"
+            id="sensor_id"
+            name="sensor_id"
+            value="{{ sensor_id_default }}"
+            required
+        >
+
+        <label for="start_exp">Data início</label>
+        <input type="date" id="start_exp" name="start" value="{{ start_default }}" required>
+
+        <label for="end_exp">Data fim</label>
+        <input type="date" id="end_exp" name="end" value="{{ end_default }}" required>
+
+        <div class="button-row">
+            <button
+                type="submit"
+                formaction="/ui/run-explore"
+                formmethod="post"
+            >
+                Gerar gráficos
+            </button>
+
+            <button
+                type="submit"
+                class="secondary"
+                formaction="/ui/show-data"
+                formmethod="post"
+            >
+                Mostrar dados (DBGrid)
+            </button>
+        </div>
+    </form>
+
+    <hr>
+
+    <!-- ========================================================= -->
+    <!-- LIFETIME -->
+    <!-- ========================================================= -->
+    <h2>Cálculo de lifetime diário</h2>
+
+    <form method="post" action="/ui/run-lifetime">
+        <label for="start_life">Data início</label>
+        <input type="date" id="start_life" name="start" value="{{ start_default }}" required>
+
+        <label for="end_life">Data fim</label>
+        <input type="date" id="end_life" name="end" value="{{ end_default }}" required>
+
+        <label for="td_days">Td – vida útil do datasheet (dias)</label>
+        <input type="number" id="td_days" name="td_days" value="710" required>
+
+        <button type="submit">Calcular lifetime diário</button>
+
+        <div class="hint">
+            O cálculo considera o sensor novo no primeiro dia e degrada a sensibilidade
+            conforme a exposição média diária.
+        </div>
+    </form>
+
+    <hr>
+
+    <!-- ========================================================= -->
+    <!-- EXPLORAR LIFETIME (DEGRADAÇÃO) -->
+    <!-- ========================================================= -->
+    <h2>Explorar lifetime (degradação)</h2>
+
+    <form>
+        <label for="sensor_id_life">Sensor ID</label>
+        <input
+            type="number"
+            id="sensor_id_life"
+            name="sensor_id"
+            value="{{ sensor_id_default }}"
+            required
+        >
+
+        <label for="start_life_view">Data início</label>
+        <input type="date" id="start_life_view" name="start" value="{{ start_default }}" required>
+
+        <label for="end_life_view">Data fim</label>
+        <input type="date" id="end_life_view" name="end" value="{{ end_default }}" required>
+
+        <div class="button-row">
+            <button
+                type="submit"
+                formaction="/ui/run-lifetime-explore"
+                formmethod="post"
+            >
+                Ver degradação (gráfico)
+            </button>
+
+            <button
+                type="submit"
+                class="secondary"
+                formaction="/ui/show-lifetime-data"
+                formmethod="post"
+            >
+                Mostrar lifetime (DBGrid)
+            </button>
+        </div>
+
+        <div class="hint">
+            Mostra a degradação do sensor no tempo com base na tabela <b>nh3_lifetime_daily</b>.
+        </div>
+    </form>
+
+    <script>
+    (function () {
+        const target = document.getElementById("agent-typing-text");
+        if (!target) return;
+
+        const lines = [
+            "Oi, eu sou o NHsys IA.",
+            "Posso te ajudar a tirar relatórios sobre os sensores de NH₃.",
+            "Para começar, basta me dizer o ID do sensor que você quer analisar.",
+            "",
+            "Exemplo: 25"
+        ];
+
+        const fullText = lines.join("\n");
+        let i = 0;
+
+        function renderTypedText(text) {
+            const html = text
+                .replace(/\n/g, "<br>")
+                .replace(/NHsys IA/g, "<b>NHsys IA</b>")
+                .replace(/ID do sensor/g, "<b>ID do sensor</b>")
+                .replace(/Exemplo: 25/g, "<b>Exemplo: 25</b>");
+
+            target.innerHTML = html + '<span class="typing-cursor">|</span>';
+        }
+
+        function typeNext() {
+            if (i <= fullText.length) {
+                renderTypedText(fullText.slice(0, i));
+                i++;
+                setTimeout(typeNext, 28);
+            } else {
+                const finalHtml = fullText
+                    .replace(/\n/g, "<br>")
+                    .replace(/NHsys IA/g, "<b>NHsys IA</b>")
+                    .replace(/ID do sensor/g, "<b>ID do sensor</b>")
+                    .replace(/Exemplo: 25/g, "<b>Exemplo: 25</b>");
+
+                target.innerHTML = finalHtml;
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", function () {
+            typeNext();
+        });
+    })();
+    </script>
+
+</body>
+</html>

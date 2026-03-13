@@ -1,0 +1,7 @@
+postgres:
+  host: "localhost"
+  port: 5433
+  database: "amonia"
+  user: "postgres"
+  password: "postgres"
+  # (opcional) schema: "public"

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ title }}</title>
+
+  <style>
+    body {
+      background:#0e1117; color:#eaeaea; font-family:Arial;
+      margin:0; padding:20px;
+    }
+    h1 { margin: 0 0 6px 0; }
+    p { margin: 0 0 16px 0; color:#cbd5e1; }
+
+    .panel {
+      background:#0b1220;
+      border:1px solid rgba(148,163,184,0.18);
+      border-radius:10px;
+      padding:14px;
+    }
+
+    .grid-wrap {
+      max-height: 70vh;           /* scroll vertical */
+      overflow: auto;
+      border-radius: 8px;
+      border: 1px solid rgba(148,163,184,0.18);
+    }
+
+    table.dbgrid {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      background: #0f172a;
+    }
+
+    table.dbgrid thead th {
+      position: sticky;           /* cabeçalho fixo */
+      top: 0;
+      z-index: 2;
+      background: #111827;
+      color: #e5e7eb;
+      text-align: left;
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(148,163,184,0.18);
+      white-space: nowrap;
+    }
+
+    table.dbgrid tbody td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(148,163,184,0.12);
+      white-space: nowrap;
+    }
+
+    table.dbgrid tbody tr:nth-child(even) {
+      background: rgba(148,163,184,0.06);
+    }
+
+    a { color:#4ea1ff; text-decoration:none; }
+    .actions { margin-top: 14px; }
+  </style>
+</head>
+
+<body>
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+
+  <div class="panel">
+    <div class="grid-wrap">
+      {{ table_html | safe }}
+    </div>
+
+    <div class="actions">
+      <a href="/ui">← Voltar</a>
+    </div>
+  </div>
+</body>
+</html>

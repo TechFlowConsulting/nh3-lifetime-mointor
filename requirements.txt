@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+PyYAML
+SQLAlchemy
+psycopg[binary]
+pandas
+numpy
+scikit-learn
+matplotlib
+python-dateutil
+jinja2
+python-multipart
+joblib
+plotly

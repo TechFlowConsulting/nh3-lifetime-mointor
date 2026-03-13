@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+
+  <style>
+    body {
+      background: #0e1117;
+      color: #eaeaea;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 40px 20px 20px 20px;
+    }
+
+    h1 {
+      margin: 0 0 6px 0;
+    }
+
+    p {
+      margin: 0 0 16px 0;
+      color: #cbd5e1;
+    }
+
+    .panel {
+      background: #0b1220;
+      border: 1px solid rgba(148,163,184,0.18);
+      border-radius: 10px;
+      padding: 14px;
+      margin: 18px 0 28px 0;
+    }
+
+    a {
+      color: #4ea1ff;
+      text-decoration: none;
+    }
+
+    .actions {
+      margin-top: 14px;
+    }
+
+    /* ============================= */
+    /* LOGOS SUPERIOR DIREITA       */
+    /* ============================= */
+    .logo-container {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-techflow {
+      width: 170px;
+    }
+
+    .logo-fluxo {
+      width: 210px;
+    }
+
+    /* ===================== DBGRID ===================== */
+    .grid-wrap {
+      max-height: 70vh;
+      overflow: auto;
+      border-radius: 8px;
+      border: 1px solid rgba(148,163,184,0.18);
+    }
+
+    table.dbgrid {
+      width: 100%;
+      border-collapse: collapse;
+      background: #0f172a;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    table.dbgrid thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #111827;
+      color: #e5e7eb;
+      text-align: left;
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(148,163,184,0.18);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    table.dbgrid thead th:hover {
+      background: #0b1220;
+    }
+
+    table.dbgrid thead th.sorted-asc::after {
+      content: " ▲";
+      font-size: 10px;
+      opacity: 0.85;
+    }
+
+    table.dbgrid thead th.sorted-desc::after {
+      content: " ▼";
+      font-size: 10px;
+      opacity: 0.85;
+    }
+
+    table.dbgrid tbody td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(148,163,184,0.12);
+      white-space: nowrap;
+    }
+
+    table.dbgrid tbody tr:nth-child(even) {
+      background: rgba(148,163,184,0.06);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="logo-container">
+    <img src="/static/logo_fluxo.png" class="logo-fluxo" alt="Fluxo">
+    <img src="/static/logo_techflowai.png" class="logo-techflow" alt="TechFlow AI">
+  </div>
+
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+
+  <!-- ===================== PLOTS (Plotly) ===================== -->
+  {% if plots %}
+    {% for plot_html in plots %}
+      <div class="panel">
+        {{ plot_html | safe }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ===================== TABLE (DBGrid) ===================== -->
+  {% if table_html %}
+    <div class="panel">
+      <div class="grid-wrap">
+        {{ table_html | safe }}
+      </div>
+      <p style="margin-top:10px; font-size:12px; color:#9ca3af;">
+        Dica: clique no cabeçalho para ordenar. Clique novamente para inverter (ASC/DESC).
+      </p>
+    </div>
+  {% endif %}
+
+  {% if (not plots) and (not table_html) %}
+    <div class="panel">
+      <p>Nenhum conteúdo para exibir.</p>
+    </div>
+  {% endif %}
+
+  <div class="actions">
+    <a href="/ui">← Voltar</a>
+  </div>
+
+  <script>
+    (function () {
+      function isDateYMD(s) {
+        return /^\d{4}-\d{2}-\d{2}$/.test(s);
+      }
+
+      function toNumber(s) {
+        const t = (s || "").trim();
+        if (!t) return NaN;
+        const cleaned = t.replace(/,/g, "");
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? n : NaN;
+      }
+
+      function inferType(tbody, colIndex) {
+        const rows = Array.from(tbody.rows).slice(0, 25);
+        let dateCount = 0, numCount = 0, strCount = 0, total = 0;
+
+        for (const r of rows) {
+          const cell = r.cells[colIndex];
+          if (!cell) continue;
+          const v = (cell.textContent || "").trim();
+          if (!v) continue;
+
+          total++;
+          if (isDateYMD(v)) { dateCount++; continue; }
+
+          const n = toNumber(v);
+          if (!Number.isNaN(n)) { numCount++; continue; }
+
+          strCount++;
+        }
+
+        if (total === 0) return "string";
+        if (dateCount >= numCount && dateCount >= strCount) return "date";
+        if (numCount >= dateCount && numCount >= strCount) return "number";
+        return "string";
+      }
+
+      function sortTable(table, colIndex, direction) {
+        const tbody = table.tBodies[0];
+        if (!tbody) return;
+
+        const type = inferType(tbody, colIndex);
+        const rows = Array.from(tbody.rows);
+        const factor = (direction === "asc") ? 1 : -1;
+
+        const collator = new Intl.Collator("pt-BR", { numeric: true, sensitivity: "base" });
+
+        rows.sort((a, b) => {
+          const av = (a.cells[colIndex]?.textContent || "").trim();
+          const bv = (b.cells[colIndex]?.textContent || "").trim();
+
+          if (!av && !bv) return 0;
+          if (!av) return 1;
+          if (!bv) return -1;
+
+          if (type === "date") {
+            return av.localeCompare(bv) * factor;
+          }
+
+          if (type === "number") {
+            const an = toNumber(av);
+            const bn = toNumber(bv);
+            if (!Number.isNaN(an) && !Number.isNaN(bn)) return (an - bn) * factor;
+            if (!Number.isNaN(an)) return -1;
+            if (!Number.isNaN(bn)) return 1;
+            return collator.compare(av, bv) * factor;
+          }
+
+          return collator.compare(av, bv) * factor;
+        });
+
+        const frag = document.createDocumentFragment();
+        rows.forEach(r => frag.appendChild(r));
+        tbody.appendChild(frag);
+      }
+
+      function clearSortClasses(ths) {
+        ths.forEach(th => {
+          th.classList.remove("sorted-asc");
+          th.classList.remove("sorted-desc");
+        });
+      }
+
+      function enableDbgridSorting() {
+        const tables = document.querySelectorAll("table.dbgrid");
+        tables.forEach(table => {
+          const thead = table.querySelector("thead");
+          const tbody = table.querySelector("tbody");
+          if (!thead || !tbody) return;
+
+          const ths = Array.from(thead.querySelectorAll("th"));
+          if (ths.length === 0) return;
+
+          table.dataset.sortCol = "";
+          table.dataset.sortDir = "asc";
+
+          ths.forEach((th, idx) => {
+            th.addEventListener("click", () => {
+              const currentCol = table.dataset.sortCol;
+              let dir = table.dataset.sortDir || "asc";
+
+              if (currentCol === String(idx)) {
+                dir = (dir === "asc") ? "desc" : "asc";
+              } else {
+                dir = "asc";
+              }
+
+              table.dataset.sortCol = String(idx);
+              table.dataset.sortDir = dir;
+
+              clearSortClasses(ths);
+              th.classList.add(dir === "asc" ? "sorted-asc" : "sorted-desc");
+
+              sortTable(table, idx, dir);
+            });
+          });
+        });
+      }
+
+      window.addEventListener("DOMContentLoaded", enableDbgridSorting);
+    })();
+  </script>
+
+</body>
+</html>
