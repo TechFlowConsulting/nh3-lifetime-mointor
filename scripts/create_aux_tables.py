@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from app.core.settings import Settings
 from app.db.session import Base, build_engine
-from app.models import aux  # noqa: F401  (register models)
+from app.models import aux_utils  # noqa: F401  (register models)
 
 
 def main():

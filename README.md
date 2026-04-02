@@ -67,3 +67,23 @@ criar o git ignore se nao houver
    .env
    .idea/
    .vscode/
+git init
+depois adicionar arquivos 
+  git add .
+criar commit
+  git commit -m "Primeira versão NH3 Lifetime Monitor"
+Verificar 
+  git status
+Enviar par agithub
+  git remote -v
+se nao retornar nem um código é porque ainda nao colocou o endereço do reposítório 
+  git remote add origin https://github.com/TechFlowConsulting/nh3-lifetime-mointor.git
+depois conferir se entrou 
+  git remote -v
+enviar 
+  git push -u origin main
+
+  futuros push do projeto 
+    git remote add origin https://github.com/TechFlowConsulting/nh3-lifetime-mointor.git
+    git branch -M main
+    git push -u origin main
